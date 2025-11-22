@@ -266,7 +266,7 @@ async function confirm(message: string): Promise<boolean> {
 
   const answer = new TextDecoder().decode(buf.subarray(0, n)).trim()
     .toLowerCase();
-  return answer === "y" || answer === "yes";
+  return answer === "y" || answer === "yes" || answer === "";
 }
 
 /**

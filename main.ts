@@ -286,6 +286,7 @@ async function main(): Promise<void> {
       "git",
       "--no-pager",
       "diff",
+      "--color=always",
       "HEAD",
       "-U0",
       "--",

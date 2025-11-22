@@ -404,28 +404,40 @@ async function main(): Promise<void> {
   // Step 5: Get the current generation
   const genInfo = await getCurrentGeneration();
 
-  // Step 6: Show status and confirm commit
+  // Step 6: Check if there are any changes to commit
   console.log("\n=== Git Status ===");
+  let hasChangesToCommit = false;
   try {
-    await runCommand("git", "status", "--short");
+    const statusOutput = await runCommandCapture("git", "status", "--short");
+    if (statusOutput.trim().length > 0) {
+      console.log(statusOutput);
+      hasChangesToCommit = true;
+    } else {
+      console.log("No changes to commit.");
+    }
   } catch (error) {
     console.log(`Warning: git status failed: ${error}`);
   }
 
-  console.log(`\nCommit message: "${genInfo.generation}"`);
-  const commitMessage = await confirmCommit(genInfo.generation);
+  // Only ask for commit if there are changes
+  if (hasChangesToCommit) {
+    console.log(`\nCommit message: "${genInfo.generation}"`);
+    const commitMessage = await confirmCommit(genInfo.generation);
 
-  if (!commitMessage) {
-    console.log("Skipping commit and push.");
-    Deno.exit(0);
-  }
+    if (!commitMessage) {
+      console.log("Skipping commit and push.");
+      Deno.exit(0);
+    }
 
-  // Step 7: Commit changes
-  try {
-    await runCommand("git", "commit", "-am", commitMessage);
-  } catch (error) {
-    console.error(`Failed to commit changes: ${error}`);
-    Deno.exit(1);
+    // Step 7: Commit changes
+    try {
+      await runCommand("git", "commit", "-am", commitMessage);
+    } catch (error) {
+      console.error(`Failed to commit changes: ${error}`);
+      Deno.exit(1);
+    }
+  } else {
+    console.log("Nothing to commit, skipping to push check.");
   }
 
   // Step 8: Confirm push

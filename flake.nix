@@ -24,8 +24,8 @@
         ];
 
         buildPhase = ''
-          export DENO_DIR="$TMPDIR/deno"
-          ${pkgs.deno}/bin/deno cache main.ts
+          # Skip caching - dependencies will be downloaded at runtime
+          echo "Skipping build phase - Deno will cache dependencies on first run"
         '';
 
         installPhase = ''
@@ -33,7 +33,8 @@
           cp main.ts $out/share/switch/main.ts
           cat > $out/bin/switch << EOF
           #!/bin/sh
-          exec ${pkgs.deno}/bin/deno run --allow-run --allow-read --allow-write --allow-env $out/share/switch/main.ts "\$@"
+          export DENO_DIR="\''${DENO_DIR:-\$HOME/.cache/deno}"
+          exec ${pkgs.deno}/bin/deno run --no-lock --allow-run --allow-read --allow-write --allow-env --allow-net $out/share/switch/main.ts "\$@"
           EOF
           chmod +x $out/bin/switch
         '';

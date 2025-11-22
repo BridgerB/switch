@@ -3,6 +3,8 @@
  * Manages the complete workflow: showing changes, rebuilding, and committing
  */
 
+import { Input, Select } from "jsr:@cliffy/prompt@^1.0.0-rc.8";
+
 /** Operating system information */
 interface OsInfo {
   type: "darwin" | "linux";
@@ -268,6 +270,35 @@ async function confirm(message: string): Promise<boolean> {
 }
 
 /**
+ * Prompts user for commit confirmation with option to provide custom message
+ * Uses cliffy TUI menu with arrow key navigation
+ * @param message - The default commit message
+ * @returns Promise resolving to the commit message to use, or null to skip
+ */
+async function confirmCommit(message: string): Promise<string | null> {
+  const choice = await Select.prompt({
+    message: "Choose commit action:",
+    options: [
+      { name: `Commit with "${message}"`, value: "default" },
+      { name: "Enter custom commit message", value: "custom" },
+      { name: "Skip commit", value: "skip" },
+    ],
+    default: "default",
+  });
+
+  if (choice === "default") {
+    return message;
+  } else if (choice === "custom") {
+    const customMessage = await Input.prompt({
+      message: "Enter custom commit message:",
+    });
+    return customMessage.trim().length > 0 ? customMessage : null;
+  } else {
+    return null;
+  }
+}
+
+/**
  * Main switch workflow
  */
 async function main(): Promise<void> {
@@ -382,16 +413,16 @@ async function main(): Promise<void> {
   }
 
   console.log(`\nCommit message: "${genInfo.generation}"`);
-  const shouldCommit = await confirm("\nCommit these changes?");
+  const commitMessage = await confirmCommit(genInfo.generation);
 
-  if (!shouldCommit) {
+  if (!commitMessage) {
     console.log("Skipping commit and push.");
     Deno.exit(0);
   }
 
   // Step 7: Commit changes
   try {
-    await runCommand("git", "commit", "-am", genInfo.generation);
+    await runCommand("git", "commit", "-am", commitMessage);
   } catch (error) {
     console.error(`Failed to commit changes: ${error}`);
     Deno.exit(1);

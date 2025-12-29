@@ -35,7 +35,7 @@ function getOsInfo(): OsInfo {
 }
 
 /**
- * Finds the Nix configuration directory at ~/git/nix
+ * Finds the Nix configuration directory at ~/Developer/nix
  * @returns Promise resolving to Nix configuration
  * @throws Error if directory doesn't exist
  */
@@ -47,7 +47,7 @@ async function getNixDir(): Promise<NixConfig> {
 
   const osInfo = getOsInfo();
   const homeDir = `${osInfo.homePrefix}/${username}`;
-  const nixDir = `${homeDir}/git/nix`;
+  const nixDir = `${homeDir}/Developer/nix`;
 
   try {
     await Deno.stat(nixDir);
